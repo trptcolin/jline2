@@ -803,11 +803,11 @@ public class ConsoleReader
     }
 
     private boolean nextWord() throws IOException {
-        while (isDelimiter(buf.current()) && (moveCursor(1) != 0)) {
+        while (isDelimiter(buf.nextChar()) && (moveCursor(1) != 0)) {
             // nothing
         }
 
-        while (!isDelimiter(buf.current()) && (moveCursor(1) != 0)) {
+        while (!isDelimiter(buf.nextChar()) && (moveCursor(1) != 0)) {
             // nothing
         }
 
@@ -820,6 +820,18 @@ public class ConsoleReader
         }
 
         while (!isDelimiter(buf.current()) && backspace()) {
+            // nothing
+        }
+
+        return true;
+    }
+
+    private boolean deleteNextWord() throws IOException {
+        while (isDelimiter(buf.nextChar()) && delete()) {
+
+        }
+
+        while (!isDelimiter(buf.nextChar()) && delete()) {
             // nothing
         }
 
@@ -988,7 +1000,7 @@ public class ConsoleReader
      *
      * @return the character, or -1 if an EOF is received.
      */
-    public final int readCharater() throws IOException {
+    public final int readCharacter() throws IOException {
         int c = reader.read();
         if (c >= 0) {
             Log.trace("Keystroke: ", c);
@@ -1078,7 +1090,7 @@ public class ConsoleReader
 
         Arrays.sort(allowed); // always need to sort before binarySearch
 
-        while (Arrays.binarySearch(allowed, c = (char) readCharater()) < 0) {
+        while (Arrays.binarySearch(allowed, c = (char) readCharacter()) < 0) {
             // nothing
         }
 
@@ -1161,7 +1173,7 @@ public class ConsoleReader
             StringBuilder sb = new StringBuilder();
             List<Character> pushBackChar = new ArrayList<Character>();
             while (true) {
-                int c = pushBackChar.isEmpty() ? readCharater() : pushBackChar.remove( pushBackChar.size() - 1 );
+                int c = pushBackChar.isEmpty() ? readCharacter() : pushBackChar.remove( pushBackChar.size() - 1 );
                 if (c == -1) {
                     return null;
                 }
@@ -1343,6 +1355,13 @@ public class ConsoleReader
                                 success = backspace();
                                 break;
 
+                            case EXIT_OR_DELETE_CHAR:
+                                if (buf.buffer.length() == 0) {
+                                    return null;
+                                }
+                                success = deleteCurrentCharacter();
+                                break;
+
                             case DELETE_CHAR: // delete
                                 success = deleteCurrentCharacter();
                                 break;
@@ -1364,7 +1383,9 @@ public class ConsoleReader
                                 // in theory, those are slightly different
                                 success = deletePreviousWord();
                                 break;
-
+                            case KILL_WORD:
+                                success = deleteNextWord();
+                                break;
                             case BEGINNING_OF_HISTORY:
                                 success = history.moveToFirst();
                                 if (success) {
@@ -1988,7 +2009,7 @@ public class ConsoleReader
                     // Overflow
                     print(resources.getString("DISPLAY_MORE"));
                     flush();
-                    int c = readCharater();
+                    int c = readCharacter();
                     if (c == '\r' || c == '\n') {
                         // one step forward
                         showLines = 1;
