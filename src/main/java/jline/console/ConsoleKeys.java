@@ -51,6 +51,11 @@ public class ConsoleKeys {
             return Urls.create(path);
         }
 
+        path = System.getenv("INPUTRC");
+        if (path != null) {
+            return Urls.create(path);
+        }
+
         File f = new File(Configuration.getUserHome(), INPUT_RC);
         if (!f.exists()) {
             f = new File(DEFAULT_INPUT_RC);
