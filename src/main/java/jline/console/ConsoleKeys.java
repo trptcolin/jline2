@@ -18,7 +18,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jline.internal.Configuration;
 import jline.internal.Log;
+import jline.internal.Urls;
 
 /**
  * @author Ståle W. Pedersen <stale.pedersen@jboss.org>
@@ -30,9 +32,31 @@ public class ConsoleKeys {
     private Map<String, KeyMap> keyMaps;
     private Map<String, String> variables = new HashMap<String,String>();
 
-    public ConsoleKeys(String appName, URL inputrcUrl) {
+    public static final String JLINE_INPUTRC = "jline.inputrc";
+
+    public static final String INPUT_RC = ".inputrc";
+    public static final String DEFAULT_INPUT_RC = "/etc/inputrc";
+
+    protected URL inputrcUrl;
+
+    public ConsoleKeys(String appName) {
         keyMaps = KeyMap.keyMaps();
-        loadKeys(appName, inputrcUrl);
+        this.inputrcUrl = getInputRc();
+        loadKeys(appName);
+    }
+
+    protected URL getInputRc() {
+        String path = Configuration.getString(JLINE_INPUTRC);
+        if (path != null) {
+            return Urls.create(path);
+        }
+
+        File f = new File(Configuration.getUserHome(), INPUT_RC);
+        if (!f.exists()) {
+            f = new File(DEFAULT_INPUT_RC);
+        }
+
+        return Urls.create(f);
     }
 
     protected boolean isViEditMode() {
@@ -64,7 +88,7 @@ public class ConsoleKeys {
         return keys.isViKeyMap ();
     }
 
-    protected void loadKeys(String appName, URL inputrcUrl) {
+    protected void loadKeys(String appName) {
         keys = keyMaps.get(KeyMap.EMACS);
 
         try {

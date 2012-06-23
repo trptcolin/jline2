@@ -51,7 +51,6 @@ import jline.internal.InputStreamReader;
 import jline.internal.Log;
 import jline.internal.NonBlockingInputStream;
 import jline.internal.Nullable;
-import jline.internal.Urls;
 import org.fusesource.jansi.AnsiOutputStream;
 
 import static jline.internal.Preconditions.checkNotNull;
@@ -72,12 +71,6 @@ public class ConsoleReader
     public static final String JLINE_NOBELL = "jline.nobell";
 
     public static final String JLINE_ESC_TIMEOUT = "jline.esc.timeout";
-
-    public static final String JLINE_INPUTRC = "jline.inputrc";
-
-    public static final String INPUT_RC = ".inputrc";
-
-    public static final String DEFAULT_INPUT_RC = "/etc/inputrc";
 
     public static final char BACKSPACE = '\b';
 
@@ -154,8 +147,6 @@ public class ConsoleReader
 
     private String appName;
 
-    private URL inputrcUrl;
-
     private ConsoleKeys consoleKeys;
 
     private String commentBegin = null;
@@ -227,22 +218,7 @@ public class ConsoleReader
         this.out = new OutputStreamWriter(terminal.wrapOutIfNeeded(out), this.encoding);
         setInput( in );
 
-        this.inputrcUrl = getInputRc();
-
-        consoleKeys = new ConsoleKeys(appName, inputrcUrl);
-    }
-
-    private URL getInputRc() throws IOException {
-        String path = Configuration.getString(JLINE_INPUTRC);
-        if (path == null) {
-            File f = new File(Configuration.getUserHome(), INPUT_RC);
-            if (!f.exists()) {
-                f = new File(DEFAULT_INPUT_RC);
-            }
-            return f.toURI().toURL();
-        } else {
-            return Urls.create(path);
-        }
+        consoleKeys = new ConsoleKeys(appName);
     }
 
     public KeyMap getKeys() {
@@ -2648,7 +2624,7 @@ public class ConsoleReader
                                 break;
 
                             case RE_READ_INIT_FILE:
-                                consoleKeys.loadKeys(appName, inputrcUrl);
+                                consoleKeys.loadKeys(appName);
                                 break;
 
                             case START_KBD_MACRO:
